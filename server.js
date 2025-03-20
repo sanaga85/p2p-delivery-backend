@@ -323,16 +323,24 @@ app.post("/signup", async (req, res) => {
 });
 
 // ✅ User Login
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: "Missing email or password" });
-  }
+app.post('/login', async (req, res) => {
   try {
-    const session = await account.createEmailPasswordSession(email, password);
-    res.status(200).json({ message: "Login successful", token: session.secret });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing email or password' });
+    }
+    // Your login logic here
+    const user = await loginUser(email, password); // Hypothetical function
+    const token = generateToken(user.id); // Hypothetical function
+    res.status(200).json({
+      message: 'Login successful',
+      access_token: token, // Rename to access_token
+      user_id: user.id,
+      email: user.email,
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Login error:', error);
+    res.status(401).json({ error: 'Invalid email or password' });
   }
 });
 
