@@ -1,42 +1,389 @@
 openapi: 3.0.0
 info:
-  title: Peer-to-Peer Delivery Backend API (Full v1.0 - Enhanced for Grabr.io Parity)
-  version: v1.0
-  description: Comprehensive API for a peer-to-peer delivery platform, matching Grabr.io's feature set. Includes authentication, shopping requests, travel itineraries, real-time chat, reviews, disputes, payments with multi-currency, KYC/delivery proof uploads, traveler ranking, availability, notifications, transaction history, and admin monitoring. Powered by Appwrite for backend services (authentication, storage, database, and real-time).
+  title: Peer-to-Peer Delivery Backend API (Optimized for Grabr.io Parity)
+  version: v1.0.1
+  description: A production-ready API for a peer-to-peer delivery platform, aligned with Grabr.io's feature set. Includes user authentication, shopping requests, travel itineraries, real-time chat, reviews, disputes, payments with multi-currency, KYC/delivery proof uploads, traveler ranking, availability, notifications, transaction history, and admin monitoring. Powered by Appwrite for backend services.
 servers:
   - url: http://localhost:5000
     description: Local backend server
-  - url: https://reimagined-goggles-wr57v7pvq5p6fvg9r-5000.app.github.dev
-    description: Codespace public URL for testing
-paths:
-  /signup:
-    post:
-      summary: User Signup
-      description: Register a new user with email, password, and full name. Uses Appwrite's authentication.
-      requestBody:
-        required: true
+  - url: https://p2p-swapper-spark.lovable.app
+    description: Production server
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth_token
+  schemas:
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        full_name:
+          type: string
+      required: [email, password, full_name]
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        rememberMe:
+          type: boolean
+          default: false
+      required: [email, password]
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        location:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        available:
+          type: boolean
+        kyc_document_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [id, full_name, email]
+    ShoppingRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        requester_id:
+          type: string
+        product_name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+          format: float
+        seller_location:
+          type: string
+        required_by:
+          type: string
+          format: date
+        description:
+          type: string
+        product_url:
+          type: string
+        delivery_instructions:
+          type: string
+        reward:
+          type: number
+          format: float
+        image_url:
+          type: string
+        status:
+          type: string
+          enum: [pending, accepted, delivered, completed, paid]
+        traveler_id:
+          type: string
+        proof_of_purchase_url:
+          type: string
+        proof_photo_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [requester_id, product_name, price, seller_location, required_by, reward]
+    TravelItinerary:
+      type: object
+      properties:
+        id:
+          type: string
+        traveler_id:
+          type: string
+        from_location:
+          type: string
+        to_location:
+          type: string
+        departure_date:
+          type: string
+          format: date
+        arrival_date:
+          type: string
+          format: date
+        available_space:
+          type: integer
+        preferred_items:
+          type: string
+        available:
+          type: boolean
+        status:
+          type: string
+          enum: [active, inactive]
+        created_at:
+          type: string
+          format: date-time
+      required: [traveler_id, from_location, to_location, departure_date, arrival_date]
+    TravelItineraryWithScore:
+      type: object
+      properties:
+        id:
+          type: string
+        traveler_id:
+          type: string
+        from_location:
+          type: string
+        to_location:
+          type: string
+        departure_date:
+          type: string
+          format: date
+        arrival_date:
+          type: string
+          format: date
+        available_space:
+          type: integer
+        preferred_items:
+          type: string
+        match_score:
+          type: number
+          format: float
+        available:
+          type: boolean
+      required: [traveler_id, from_location, to_location, departure_date, arrival_date, match_score]
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        sender_id:
+          type: string
+        receiver_id:
+          type: string
         content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SignupRequest'
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [sender_id, receiver_id, content]
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        reviewer_id:
+          type: string
+        reviewee_id:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [reviewer_id, reviewee_id, rating]
+    Match:
+      type: object
+      properties:
+        request_id:
+          type: string
+        traveler_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [request_id, traveler_id]
+    AcceptRequest:
+      type: object
+      properties:
+        request_id:
+          type: string
+        traveler_id:
+          type: string
+      required: [request_id, traveler_id]
+    DeliveryConfirmation:
+      type: object
+      properties:
+        request_id:
+          type: string
+        traveler_id:
+          type: string
+      required: [request_id, traveler_id]
+    PaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: float
+        shopper_id:
+          type: string
+        currency:
+          type: string
+          default: "INR"
+      required: [amount, shopper_id]
+    CapturePayment:
+      type: object
+      properties:
+        payment_id:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          default: "INR"
+      required: [payment_id, amount]
+    ManualPaymentRelease:
+      type: object
+      properties:
+        traveler_account_id:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          default: "INR"
+      required: [traveler_account_id, amount]
+    Dispute:
+      type: object
+      properties:
+        id:
+          type: string
+        request_id:
+          type: string
+        user_id:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [open, resolved]
+        resolution_notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [request_id, user_id, reason]
+    ResolveDispute:
+      type: object
+      properties:
+        dispute_id:
+          type: string
+        resolution_notes:
+          type: string
+      required: [dispute_id, resolution_notes]
+    SetAvailability:
+      type: object
+      properties:
+        user_id:
+          type: string
+        available:
+          type: boolean
+      required: [user_id, available]
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [user_id, message]
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        order_id:
+          type: string
+        shopper_id:
+          type: string
+        amount:
+          type: number
+          format: float
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, captured, released]
+        created_at:
+          type: string
+          format: date-time
+      required: [order_id, shopper_id, amount, currency]
+    IncompleteProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+      required: [id, full_name, email]
+paths:
+  /api/locations:
+    get:
+      summary: Fetch location suggestions
+      description: Retrieves location suggestions using Google Places API for autocomplete.
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Signup successful
+          description: Location suggestions fetched
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message: { type: string }
-                  user_id: { type: string }
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    country:
+                      type: string
         '400':
-          description: Bad request - invalid input (e.g., disposable email, invalid domain)
+          description: Bad request - missing query parameter
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -44,11 +391,52 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+  /signup:
+    post:
+      summary: User Signup
+      description: Registers a new user with email, password, and full name. Validates email for disposability and MX records.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user_id:
+                    type: string
+        '400':
+          description: Bad request - invalid input (e.g., disposable email, invalid domain)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /login:
     post:
       summary: User Login
-      description: Authenticate a user with email and password. Returns a session token using Appwrite's authentication.
+      description: Authenticates a user with email and password, returning a JWT token in a secure cookie.
       requestBody:
         required: true
         content:
@@ -63,16 +451,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  token: { type: string }
-        '400':
-          description: Bad request - invalid credentials
+                  user_id:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+        '401':
+          description: Unauthorized - invalid credentials
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -80,20 +472,22 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /auth/google:
-    post:
+    get:
       summary: Google OAuth Login
       description: Initiates Google OAuth login flow using Appwrite's OAuth2 integration.
       responses:
         '200':
-          description: Google login URL returned
+          description: Redirects to Google login URL
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  url: { type: string }
+                  url:
+                    type: string
         '400':
           description: Bad request
           content:
@@ -101,7 +495,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -109,20 +504,22 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /auth/facebook:
-    post:
+    get:
       summary: Facebook OAuth Login
       description: Initiates Facebook OAuth login flow using Appwrite's OAuth2 integration.
       responses:
         '200':
-          description: Facebook login URL returned
+          description: Redirects to Facebook login URL
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  url: { type: string }
+                  url:
+                    type: string
         '400':
           description: Bad request
           content:
@@ -130,7 +527,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -138,11 +536,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /user-profile/{user_id}:
     get:
       summary: Fetch user profile
       description: Retrieves the profile of a user, including availability status.
+      security:
+        - CookieAuth: []
       parameters:
         - name: user_id
           in: path
@@ -156,6 +557,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to access this profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -163,23 +582,290 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+    put:
+      summary: Update user profile
+      description: Updates the profile of a user, including full name, phone number, location, bio, and availability.
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                phone_number:
+                  type: string
+                location:
+                  type: string
+                bio:
+                  type: string
+                available:
+                  type: boolean
+      responses:
+        '200':
+          description: User profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to update this profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /user-profile/{user_id}/avatar:
+    post:
+      summary: Upload user avatar
+      description: Uploads an avatar image for a user.
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+              required: [avatar]
+      responses:
+        '200':
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avatar_url:
+                    type: string
+        '400':
+          description: Bad request - invalid file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to update this profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /kyc:
+    post:
+      summary: Upload KYC document
+      description: Uploads a KYC document for a user.
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                kyc_document:
+                  type: string
+                  format: binary
+              required: [user_id, kyc_document]
+      responses:
+        '200':
+          description: KYC document uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  kyc_document_url:
+                    type: string
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /upload:
+    post:
+      summary: Upload image
+      description: Uploads an image file for use in shopping requests or profiles.
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required: [file]
+      responses:
+        '200':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+        '400':
+          description: Bad request - invalid file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /shopping-requests:
     get:
       summary: Fetch all shopping requests
-      description: Retrieves a list of shopping requests with optional filters for location and category.
+      description: Retrieves a paginated list of shopping requests with optional filters for search, origin, and destination.
       parameters:
-        - name: location
+        - name: search
           in: query
           schema:
             type: string
-        - name: category
+        - name: origin
           in: query
           schema:
             type: string
+        - name: destination
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 12
       responses:
         '200':
-          description: List of requests
+          description: List of shopping requests
           content:
             application/json:
               schema:
@@ -196,10 +882,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
     post:
       summary: Create shopping request
-      description: Creates a new shopping request for a user to purchase an item.
+      description: Creates a new shopping request for a user to purchase an item. Requires KYC verification.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -207,15 +896,17 @@ paths:
             schema:
               $ref: '#/components/schemas/ShoppingRequest'
       responses:
-        '200':
-          description: Created
+        '201':
+          description: Shopping request created
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  request_id: { type: string }
+                  message:
+                    type: string
+                  request_id:
+                    type: string
         '400':
           description: Bad request - invalid input (e.g., invalid date)
           content:
@@ -223,7 +914,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - KYC verification required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -231,11 +941,65 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+  /my-shopping-requests/{userId}:
+    get:
+      summary: Fetch user's shopping requests
+      description: Retrieves all shopping requests created by a specific user.
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of user's shopping requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shopping_requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ShoppingRequest'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to access these requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /travel-itineraries:
     post:
       summary: Post travel itinerary
-      description: Allows a traveler to post their travel itinerary for matching with shopping requests.
+      description: Allows a traveler to post their travel itinerary for matching with shopping requests. Requires KYC verification.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -243,15 +1007,17 @@ paths:
             schema:
               $ref: '#/components/schemas/TravelItinerary'
       responses:
-        '200':
-          description: Created
+        '201':
+          description: Travel itinerary created
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  itinerary: { $ref: '#/components/schemas/TravelItinerary' }
+                  message:
+                    type: string
+                  itinerary:
+                    $ref: '#/components/schemas/TravelItinerary'
         '400':
           description: Bad request - invalid input (e.g., invalid dates)
           content:
@@ -259,7 +1025,35 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - KYC verification required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '409':
+          description: Conflict - duplicate itinerary exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -267,13 +1061,87 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
-  /my-travel-itineraries/{user_id}:
+                  error:
+                    type: string
+  /travel-itineraries/{id}:
+    patch:
+      summary: Update travel itinerary status
+      description: Updates the status of a travel itinerary (e.g., active/inactive).
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, inactive]
+              required: [status]
+      responses:
+        '200':
+          description: Itinerary updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  itinerary:
+                    $ref: '#/components/schemas/TravelItinerary'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to update this itinerary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /travel-itineraries/user/{userId}:
     get:
       summary: Fetch user's travel itineraries
       description: Retrieves all travel itineraries for a specific user.
+      security:
+        - CookieAuth: []
       parameters:
-        - name: user_id
+        - name: userId
           in: path
           required: true
           schema:
@@ -290,6 +1158,24 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/TravelItinerary'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to access these itineraries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -297,11 +1183,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /suggest-travelers/{request_id}:
     get:
       summary: Suggest travelers for a shopping request
       description: Returns a list of travelers whose itineraries match the shopping request, sorted by a match score.
+      security:
+        - CookieAuth: []
       parameters:
         - name: request_id
           in: path
@@ -320,6 +1209,24 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/TravelItineraryWithScore'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to access this request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -327,11 +1234,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /send-message:
     post:
       summary: Send chat message
-      description: Sends a message between users. Real-time updates are handled via Appwrite Realtime subscriptions on the client side.
+      description: Sends a message between users and notifies the receiver.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -340,14 +1250,16 @@ paths:
               $ref: '#/components/schemas/Message'
       responses:
         '200':
-          description: Sent
+          description: Message sent
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  data: { $ref: '#/components/schemas/Message' }
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Message'
         '400':
           description: Bad request - invalid input
           content:
@@ -355,7 +1267,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to send message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -363,11 +1294,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /chat-history:
     get:
       summary: Fetch chat history
       description: Retrieves the chat history between two users.
+      security:
+        - CookieAuth: []
       parameters:
         - name: user1
           in: query
@@ -381,7 +1315,7 @@ paths:
             type: string
       responses:
         '200':
-          description: History returned
+          description: Chat history returned
           content:
             application/json:
               schema:
@@ -398,7 +1332,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to access this chat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -406,11 +1359,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /post-review:
     post:
       summary: Post review
       description: Allows a user to post a review for another user (e.g., traveler or shopper).
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -425,7 +1381,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
+                  message:
+                    type: string
+                  review_id:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -433,7 +1392,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to post review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -441,7 +1419,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /user-reviews/{user_id}:
     get:
       summary: Get user reviews
@@ -464,14 +1443,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Review'
-        '400':
-          description: Bad request - invalid user_id
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
         '500':
           description: Internal server error
           content:
@@ -479,7 +1450,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /traveler-ranking/{user_id}:
     get:
       summary: Get traveler ranking
@@ -498,9 +1470,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  user_id: { type: string }
-                  average_rating: { type: number }
-                  review_count: { type: integer }
+                  user_id:
+                    type: string
+                  average_rating:
+                    type: number
+                    format: float
+                  review_count:
+                    type: integer
         '500':
           description: Internal server error
           content:
@@ -508,11 +1484,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /matches:
     post:
       summary: Create match between request and traveler
-      description: Creates a match between a shopping request and a traveler.
+      description: Creates a match between a shopping request and a traveler, notifying the requester.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -527,8 +1506,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  request_id: { type: string }
-                  traveler_id: { type: string }
+                  request_id:
+                    type: string
+                  traveler_id:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -536,7 +1517,35 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to create match
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '409':
+          description: Conflict - match already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -544,11 +1553,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /accept-request:
     post:
       summary: Accept request by traveler
       description: Allows a traveler to accept a shopping request, notifying the shopper.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -557,13 +1569,14 @@ paths:
               $ref: '#/components/schemas/AcceptRequest'
       responses:
         '200':
-          description: Accepted
+          description: Request accepted
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
+                  message:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -571,7 +1584,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to accept request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -579,11 +1611,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /confirm-delivery:
     post:
       summary: Confirm delivery and schedule auto-release payment
       description: Confirms delivery of a shopping request and schedules payment auto-release.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -592,13 +1627,14 @@ paths:
               $ref: '#/components/schemas/DeliveryConfirmation'
       responses:
         '200':
-          description: Confirmed
+          description: Delivery confirmed
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
+                  message:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -606,7 +1642,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to confirm delivery
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -614,11 +1669,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /create-payment:
     post:
       summary: Create Razorpay order with multi-currency support
       description: Creates a Razorpay order for payment with multi-currency support.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -633,7 +1691,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  order_id: { type: string }
+                  order_id:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -641,7 +1700,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to create payment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -649,11 +1727,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /capture-payment:
     post:
       summary: Capture Razorpay payment with multi-currency support
       description: Captures a Razorpay payment after order creation.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -662,13 +1743,14 @@ paths:
               $ref: '#/components/schemas/CapturePayment'
       responses:
         '200':
-          description: Captured
+          description: Payment captured
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
+                  message:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -676,7 +1758,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to capture payment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -684,11 +1785,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /auto-release-payment:
     post:
       summary: Manually release payment to traveler
       description: Manually releases payment to a traveler from escrow.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -703,8 +1807,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  transfer: { type: object }
+                  message:
+                    type: string
+                  transfer:
+                    type: object
         '400':
           description: Bad request - invalid input
           content:
@@ -712,7 +1818,17 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -720,97 +1836,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
-  /upload-kyc:
-    post:
-      summary: Upload KYC document
-      description: Uploads a KYC document for a user using Appwrite Storage. Returns the file ID.
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                user_id:
-                  type: string
-                kyc_document:
-                  type: string
-                  format: binary
-              required: [user_id, kyc_document]
-      responses:
-        '200':
-          description: Uploaded
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: { type: string }
-                  file_id: { type: string }
-        '400':
-          description: Bad request - invalid input
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-  /upload-delivery-proof:
-    post:
-      summary: Upload delivery proof
-      description: Uploads a delivery proof photo for a shopping request using Appwrite Storage. Returns the file ID.
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                request_id:
-                  type: string
-                proof_photo:
-                  type: string
-                  format: binary
-              required: [request_id, proof_photo]
-      responses:
-        '200':
-          description: Uploaded
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: { type: string }
-                  file_id: { type: string }
-        '400':
-          description: Bad request - invalid input
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /upload-proof-of-purchase:
     post:
       summary: Upload proof of purchase
-      description: Uploads a proof of purchase for a shopping request using Appwrite Storage. Returns the file ID.
+      description: Uploads a proof of purchase for a shopping request.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -826,14 +1859,16 @@ paths:
               required: [request_id, proof_file]
       responses:
         '200':
-          description: Uploaded
+          description: Proof of purchase uploaded
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
-                  file_id: { type: string }
+                  message:
+                    type: string
+                  file_url:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -841,7 +1876,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to upload proof
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -849,14 +1903,84 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+  /upload-delivery-proof:
+    post:
+      summary: Upload delivery proof
+      description: Uploads a delivery proof photo for a shopping request.
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                request_id:
+                  type: string
+                proof_photo:
+                  type: string
+                  format: binary
+              required: [request_id, proof_photo]
+      responses:
+        '200':
+          description: Delivery proof uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  file_url:
+                    type: string
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to upload proof
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /admin/all-shopping-requests:
     get:
       summary: Admin view all requests
       description: Retrieves all shopping requests for admin monitoring.
+      security:
+        - CookieAuth: []
       responses:
         '200':
-          description: List returned
+          description: List of all shopping requests
           content:
             application/json:
               schema:
@@ -866,6 +1990,24 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/ShoppingRequest'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - admin access required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -873,11 +2015,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /admin/incomplete-traveler-profiles:
     get:
       summary: Admin view incomplete traveler profiles
       description: Retrieves a list of traveler profiles that are incomplete (e.g., missing phone number).
+      security:
+        - CookieAuth: []
       responses:
         '200':
           description: List of incomplete profiles
@@ -890,6 +2035,24 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/IncompleteProfile'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - admin access required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -897,11 +2060,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /raise-dispute:
     post:
       summary: Raise dispute
       description: Allows a user to raise a dispute for a shopping request.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -910,13 +2076,16 @@ paths:
               $ref: '#/components/schemas/Dispute'
       responses:
         '200':
-          description: Raised
+          description: Dispute raised
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
+                  message:
+                    type: string
+                  dispute_id:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -924,7 +2093,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to raise dispute
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -932,11 +2120,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /admin/disputes:
     get:
       summary: Admin view disputes
       description: Retrieves all disputes for admin review.
+      security:
+        - CookieAuth: []
       responses:
         '200':
           description: Disputes returned
@@ -949,6 +2140,24 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Dispute'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - admin access required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -956,11 +2165,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /admin/resolve-dispute:
     post:
       summary: Resolve dispute
       description: Allows an admin to resolve a dispute with notes.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -969,13 +2181,14 @@ paths:
               $ref: '#/components/schemas/ResolveDispute'
       responses:
         '200':
-          description: Resolved
+          description: Dispute resolved
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
+                  message:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -983,7 +2196,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - admin access required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -991,11 +2223,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /set-availability:
     post:
       summary: Set traveler availability status
       description: Allows a traveler to set their availability status for matching.
+      security:
+        - CookieAuth: []
       requestBody:
         required: true
         content:
@@ -1010,7 +2245,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  message: { type: string }
+                  message:
+                    type: string
         '400':
           description: Bad request - invalid input
           content:
@@ -1018,7 +2254,26 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to set availability
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -1026,11 +2281,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /notifications/{user_id}:
     get:
       summary: Fetch user notifications
       description: Retrieves all notifications for a specific user.
+      security:
+        - CookieAuth: []
       parameters:
         - name: user_id
           in: path
@@ -1046,6 +2304,24 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Notification'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to access notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -1053,11 +2329,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
+                  error:
+                    type: string
   /user-transactions/{user_id}:
     get:
       summary: Fetch user transaction history
       description: Retrieves the transaction history for a specific user.
+      security:
+        - CookieAuth: []
       parameters:
         - name: user_id
           in: path
@@ -1076,6 +2355,24 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Payment'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to access transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
         '500':
           description: Internal server error
           content:
@@ -1083,170 +2380,71 @@ paths:
               schema:
                 type: object
                 properties:
-                  error: { type: string }
-components:
-  schemas:
-    SignupRequest:
-      type: object
-      properties:
-        email: { type: string }
-        password: { type: string }
-        full_name: { type: string }
-      required: [email, password, full_name]
-    LoginRequest:
-      type: object
-      properties:
-        email: { type: string }
-        password: { type: string }
-      required: [email, password]
-    UserProfile:
-      type: object
-      properties:
-        id: { type: string }
-        full_name: { type: string }
-        email: { type: string }
-        phone_number: { type: string }
-        created_at: { type: string, format: date-time }
-        available: { type: boolean }
-        kyc_document_id: { type: string }
-      required: [id, full_name, email]
-    ShoppingRequest:
-      type: object
-      properties:
-        shopper_id: { type: string }
-        product_name: { type: string }
-        category: { type: string }
-        price: { type: number }
-        seller_location: { type: string }
-        required_by: { type: string, format: date }
-        proof_of_purchase_id: { type: string }
-        proof_photo_id: { type: string }
-        status: { type: string, enum: [pending, accepted, delivered, completed, paid] }
-      required: [shopper_id, product_name, price, seller_location, required_by]
-    TravelItinerary:
-      type: object
-      properties:
-        traveler_id: { type: string }
-        from_location: { type: string }
-        to_location: { type: string }
-        departure_date: { type: string, format: date }
-        arrival_date: { type: string, format: date }
-        available_space: { type: number }
-        preferred_items: { type: string }
-        available: { type: boolean }
-      required: [traveler_id, from_location, to_location, departure_date, arrival_date]
-    TravelItineraryWithScore:
-      type: object
-      properties:
-        traveler_id: { type: string }
-        from_location: { type: string }
-        to_location: { type: string }
-        departure_date: { type: string, format: date }
-        arrival_date: { type: string, format: date }
-        available_space: { type: number }
-        preferred_items: { type: string }
-        match_score: { type: number }
-        available: { type: boolean }
-      required: [traveler_id, from_location, to_location, departure_date, arrival_date, match_score]
-    Message:
-      type: object
-      properties:
-        sender_id: { type: string }
-        receiver_id: { type: string }
-        content: { type: string }
-        created_at: { type: string, format: date-time }
-      required: [sender_id, receiver_id, content]
-    Review:
-      type: object
-      properties:
-        reviewer_id: { type: string }
-        reviewee_id: { type: string }
-        rating: { type: integer }
-        comment: { type: string }
-      required: [reviewer_id, reviewee_id, rating]
-    Match:
-      type: object
-      properties:
-        request_id: { type: string }
-        traveler_id: { type: string }
-      required: [request_id, traveler_id]
-    AcceptRequest:
-      type: object
-      properties:
-        request_id: { type: string }
-        traveler_id: { type: string }
-      required: [request_id, traveler_id]
-    DeliveryConfirmation:
-      type: object
-      properties:
-        request_id: { type: string }
-        traveler_id: { type: string }
-        amount: { type: number }
-        currency: { type: string, default: "INR" }
-      required: [request_id, traveler_id, amount]
-    PaymentRequest:
-      type: object
-      properties:
-        amount: { type: number }
-        shopper_id: { type: string }
-        currency: { type: string, default: "INR" }
-      required: [amount, shopper_id]
-    CapturePayment:
-      type: object
-      properties:
-        payment_id: { type: string }
-        amount: { type: number }
-        currency: { type: string, default: "INR" }
-      required: [payment_id, amount]
-    ManualPaymentRelease:
-      type: object
-      properties:
-        traveler_account_id: { type: string }
-        amount: { type: number }
-        currency: { type: string, default: "INR" }
-      required: [traveler_account_id, amount]
-    Dispute:
-      type: object
-      properties:
-        request_id: { type: string }
-        user_id: { type: string }
-        reason: { type: string }
-        status: { type: string, enum: [open, resolved] }
-        resolution_notes: { type: string }
-      required: [request_id, user_id, reason]
-    ResolveDispute:
-      type: object
-      properties:
-        dispute_id: { type: string }
-        resolution_notes: { type: string }
-      required: [dispute_id, resolution_notes]
-    SetAvailability:
-      type: object
-      properties:
-        user_id: { type: string }
-        available: { type: boolean }
-      required: [user_id, available]
-    Notification:
-      type: object
-      properties:
-        user_id: { type: string }
-        message: { type: string }
-        created_at: { type: string, format: date-time }
-      required: [user_id, message]
-    Payment:
-      type: object
-      properties:
-        order_id: { type: string }
-        shopper_id: { type: string }
-        amount: { type: number }
-        currency: { type: string }
-        status: { type: string, enum: [pending, captured, released] }
-        created_at: { type: string, format: date-time }
-      required: [order_id, shopper_id, amount, currency]
-    IncompleteProfile:
-      type: object
-      properties:
-        id: { type: string }
-        full_name: { type: string }
-        email: { type: string }
-      required: [id, full_name, email]
+                  error:
+                    type: string
+  /analytics/track:
+    post:
+      summary: Track user analytics event
+      description: Tracks a user event for analytics purposes (e.g., page view, button click).
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                event_type:
+                  type: string
+                event_data:
+                  type: object
+              required: [user_id, event_type]
+      responses:
+        '200':
+          description: Event tracked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - user not authorized to track event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
