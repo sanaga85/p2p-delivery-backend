@@ -15,9 +15,12 @@ const multer = require("multer");
 const app = express();
 
 const corsOptions = {
-  origin: "https://reimagined-goggles-wr57v7pvq5p6fvg9r-5000.app.github.dev",
-  optionsSuccessStatus: 200,
+  origin: 'https://p2p-swapper-spark.lovable.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 };
+app.use(cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(express.json());
 
