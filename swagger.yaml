@@ -1,0 +1,1252 @@
+openapi: 3.0.0
+info:
+  title: Peer-to-Peer Delivery Backend API (Full v1.0 - Enhanced for Grabr.io Parity)
+  version: v1.0
+  description: Comprehensive API for a peer-to-peer delivery platform, matching Grabr.io's feature set. Includes authentication, shopping requests, travel itineraries, real-time chat, reviews, disputes, payments with multi-currency, KYC/delivery proof uploads, traveler ranking, availability, notifications, transaction history, and admin monitoring. Powered by Appwrite for backend services (authentication, storage, database, and real-time).
+servers:
+  - url: http://localhost:5000
+    description: Local backend server
+  - url: https://reimagined-goggles-wr57v7pvq5p6fvg9r-5000.app.github.dev
+    description: Codespace public URL for testing
+paths:
+  /signup:
+    post:
+      summary: User Signup
+      description: Register a new user with email, password, and full name. Uses Appwrite's authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: Signup successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  user_id: { type: string }
+        '400':
+          description: Bad request - invalid input (e.g., disposable email, invalid domain)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /login:
+    post:
+      summary: User Login
+      description: Authenticate a user with email and password. Returns a session token using Appwrite's authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  token: { type: string }
+        '400':
+          description: Bad request - invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /auth/google:
+    post:
+      summary: Google OAuth Login
+      description: Initiates Google OAuth login flow using Appwrite's OAuth2 integration.
+      responses:
+        '200':
+          description: Google login URL returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /auth/facebook:
+    post:
+      summary: Facebook OAuth Login
+      description: Initiates Facebook OAuth login flow using Appwrite's OAuth2 integration.
+      responses:
+        '200':
+          description: Facebook login URL returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /user-profile/{user_id}:
+    get:
+      summary: Fetch user profile
+      description: Retrieves the profile of a user, including availability status.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User profile fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /shopping-requests:
+    get:
+      summary: Fetch all shopping requests
+      description: Retrieves a list of shopping requests with optional filters for location and category.
+      parameters:
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shopping_requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ShoppingRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+    post:
+      summary: Create shopping request
+      description: Creates a new shopping request for a user to purchase an item.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingRequest'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  request_id: { type: string }
+        '400':
+          description: Bad request - invalid input (e.g., invalid date)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /travel-itineraries:
+    post:
+      summary: Post travel itinerary
+      description: Allows a traveler to post their travel itinerary for matching with shopping requests.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TravelItinerary'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  itinerary: { $ref: '#/components/schemas/TravelItinerary' }
+        '400':
+          description: Bad request - invalid input (e.g., invalid dates)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /my-travel-itineraries/{user_id}:
+    get:
+      summary: Fetch user's travel itineraries
+      description: Retrieves all travel itineraries for a specific user.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of itineraries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  travel_itineraries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TravelItinerary'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /suggest-travelers/{request_id}:
+    get:
+      summary: Suggest travelers for a shopping request
+      description: Returns a list of travelers whose itineraries match the shopping request, sorted by a match score.
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Suggested travelers with match scores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggested_travelers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TravelItineraryWithScore'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /send-message:
+    post:
+      summary: Send chat message
+      description: Sends a message between users. Real-time updates are handled via Appwrite Realtime subscriptions on the client side.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Message'
+      responses:
+        '200':
+          description: Sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  data: { $ref: '#/components/schemas/Message' }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /chat-history:
+    get:
+      summary: Fetch chat history
+      description: Retrieves the chat history between two users.
+      parameters:
+        - name: user1
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: user2
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: History returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chat:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '400':
+          description: Bad request - invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /post-review:
+    post:
+      summary: Post review
+      description: Allows a user to post a review for another user (e.g., traveler or shopper).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+      responses:
+        '200':
+          description: Review submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /user-reviews/{user_id}:
+    get:
+      summary: Get user reviews
+      description: Retrieves all reviews for a specific user.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reviews fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reviews:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+        '400':
+          description: Bad request - invalid user_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /traveler-ranking/{user_id}:
+    get:
+      summary: Get traveler ranking
+      description: Calculates and returns the average rating and review count for a traveler.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Traveler ranking fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id: { type: string }
+                  average_rating: { type: number }
+                  review_count: { type: integer }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /matches:
+    post:
+      summary: Create match between request and traveler
+      description: Creates a match between a shopping request and a traveler.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Match'
+      responses:
+        '200':
+          description: Match created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  request_id: { type: string }
+                  traveler_id: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /accept-request:
+    post:
+      summary: Accept request by traveler
+      description: Allows a traveler to accept a shopping request, notifying the shopper.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptRequest'
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /confirm-delivery:
+    post:
+      summary: Confirm delivery and schedule auto-release payment
+      description: Confirms delivery of a shopping request and schedules payment auto-release.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryConfirmation'
+      responses:
+        '200':
+          description: Confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /create-payment:
+    post:
+      summary: Create Razorpay order with multi-currency support
+      description: Creates a Razorpay order for payment with multi-currency support.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order_id: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /capture-payment:
+    post:
+      summary: Capture Razorpay payment with multi-currency support
+      description: Captures a Razorpay payment after order creation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CapturePayment'
+      responses:
+        '200':
+          description: Captured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /auto-release-payment:
+    post:
+      summary: Manually release payment to traveler
+      description: Manually releases payment to a traveler from escrow.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualPaymentRelease'
+      responses:
+        '200':
+          description: Payment released manually
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  transfer: { type: object }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /upload-kyc:
+    post:
+      summary: Upload KYC document
+      description: Uploads a KYC document for a user using Appwrite Storage. Returns the file ID.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                kyc_document:
+                  type: string
+                  format: binary
+              required: [user_id, kyc_document]
+      responses:
+        '200':
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  file_id: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /upload-delivery-proof:
+    post:
+      summary: Upload delivery proof
+      description: Uploads a delivery proof photo for a shopping request using Appwrite Storage. Returns the file ID.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                request_id:
+                  type: string
+                proof_photo:
+                  type: string
+                  format: binary
+              required: [request_id, proof_photo]
+      responses:
+        '200':
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  file_id: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /upload-proof-of-purchase:
+    post:
+      summary: Upload proof of purchase
+      description: Uploads a proof of purchase for a shopping request using Appwrite Storage. Returns the file ID.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                request_id:
+                  type: string
+                proof_file:
+                  type: string
+                  format: binary
+              required: [request_id, proof_file]
+      responses:
+        '200':
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  file_id: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /admin/all-shopping-requests:
+    get:
+      summary: Admin view all requests
+      description: Retrieves all shopping requests for admin monitoring.
+      responses:
+        '200':
+          description: List returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  all_requests:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ShoppingRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /admin/incomplete-traveler-profiles:
+    get:
+      summary: Admin view incomplete traveler profiles
+      description: Retrieves a list of traveler profiles that are incomplete (e.g., missing phone number).
+      responses:
+        '200':
+          description: List of incomplete profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  incomplete_profiles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IncompleteProfile'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /raise-dispute:
+    post:
+      summary: Raise dispute
+      description: Allows a user to raise a dispute for a shopping request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Dispute'
+      responses:
+        '200':
+          description: Raised
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /admin/disputes:
+    get:
+      summary: Admin view disputes
+      description: Retrieves all disputes for admin review.
+      responses:
+        '200':
+          description: Disputes returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  disputes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dispute'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /admin/resolve-dispute:
+    post:
+      summary: Resolve dispute
+      description: Allows an admin to resolve a dispute with notes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveDispute'
+      responses:
+        '200':
+          description: Resolved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /set-availability:
+    post:
+      summary: Set traveler availability status
+      description: Allows a traveler to set their availability status for matching.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAvailability'
+      responses:
+        '200':
+          description: Availability updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /notifications/{user_id}:
+    get:
+      summary: Fetch user notifications
+      description: Retrieves all notifications for a specific user.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notifications fetched
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+  /user-transactions/{user_id}:
+    get:
+      summary: Fetch user transaction history
+      description: Retrieves the transaction history for a specific user.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transactions fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+components:
+  schemas:
+    SignupRequest:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+        full_name: { type: string }
+      required: [email, password, full_name]
+    LoginRequest:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+      required: [email, password]
+    UserProfile:
+      type: object
+      properties:
+        id: { type: string }
+        full_name: { type: string }
+        email: { type: string }
+        phone_number: { type: string }
+        created_at: { type: string, format: date-time }
+        available: { type: boolean }
+        kyc_document_id: { type: string }
+      required: [id, full_name, email]
+    ShoppingRequest:
+      type: object
+      properties:
+        shopper_id: { type: string }
+        product_name: { type: string }
+        category: { type: string }
+        price: { type: number }
+        seller_location: { type: string }
+        required_by: { type: string, format: date }
+        proof_of_purchase_id: { type: string }
+        proof_photo_id: { type: string }
+        status: { type: string, enum: [pending, accepted, delivered, completed, paid] }
+      required: [shopper_id, product_name, price, seller_location, required_by]
+    TravelItinerary:
+      type: object
+      properties:
+        traveler_id: { type: string }
+        from_location: { type: string }
+        to_location: { type: string }
+        departure_date: { type: string, format: date }
+        arrival_date: { type: string, format: date }
+        available_space: { type: number }
+        preferred_items: { type: string }
+        available: { type: boolean }
+      required: [traveler_id, from_location, to_location, departure_date, arrival_date]
+    TravelItineraryWithScore:
+      type: object
+      properties:
+        traveler_id: { type: string }
+        from_location: { type: string }
+        to_location: { type: string }
+        departure_date: { type: string, format: date }
+        arrival_date: { type: string, format: date }
+        available_space: { type: number }
+        preferred_items: { type: string }
+        match_score: { type: number }
+        available: { type: boolean }
+      required: [traveler_id, from_location, to_location, departure_date, arrival_date, match_score]
+    Message:
+      type: object
+      properties:
+        sender_id: { type: string }
+        receiver_id: { type: string }
+        content: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [sender_id, receiver_id, content]
+    Review:
+      type: object
+      properties:
+        reviewer_id: { type: string }
+        reviewee_id: { type: string }
+        rating: { type: integer }
+        comment: { type: string }
+      required: [reviewer_id, reviewee_id, rating]
+    Match:
+      type: object
+      properties:
+        request_id: { type: string }
+        traveler_id: { type: string }
+      required: [request_id, traveler_id]
+    AcceptRequest:
+      type: object
+      properties:
+        request_id: { type: string }
+        traveler_id: { type: string }
+      required: [request_id, traveler_id]
+    DeliveryConfirmation:
+      type: object
+      properties:
+        request_id: { type: string }
+        traveler_id: { type: string }
+        amount: { type: number }
+        currency: { type: string, default: "INR" }
+      required: [request_id, traveler_id, amount]
+    PaymentRequest:
+      type: object
+      properties:
+        amount: { type: number }
+        shopper_id: { type: string }
+        currency: { type: string, default: "INR" }
+      required: [amount, shopper_id]
+    CapturePayment:
+      type: object
+      properties:
+        payment_id: { type: string }
+        amount: { type: number }
+        currency: { type: string, default: "INR" }
+      required: [payment_id, amount]
+    ManualPaymentRelease:
+      type: object
+      properties:
+        traveler_account_id: { type: string }
+        amount: { type: number }
+        currency: { type: string, default: "INR" }
+      required: [traveler_account_id, amount]
+    Dispute:
+      type: object
+      properties:
+        request_id: { type: string }
+        user_id: { type: string }
+        reason: { type: string }
+        status: { type: string, enum: [open, resolved] }
+        resolution_notes: { type: string }
+      required: [request_id, user_id, reason]
+    ResolveDispute:
+      type: object
+      properties:
+        dispute_id: { type: string }
+        resolution_notes: { type: string }
+      required: [dispute_id, resolution_notes]
+    SetAvailability:
+      type: object
+      properties:
+        user_id: { type: string }
+        available: { type: boolean }
+      required: [user_id, available]
+    Notification:
+      type: object
+      properties:
+        user_id: { type: string }
+        message: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [user_id, message]
+    Payment:
+      type: object
+      properties:
+        order_id: { type: string }
+        shopper_id: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        status: { type: string, enum: [pending, captured, released] }
+        created_at: { type: string, format: date-time }
+      required: [order_id, shopper_id, amount, currency]
+    IncompleteProfile:
+      type: object
+      properties:
+        id: { type: string }
+        full_name: { type: string }
+        email: { type: string }
+      required: [id, full_name, email]
